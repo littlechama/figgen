@@ -1,0 +1,91 @@
+# 全部のブロックを1枚に並べた見本。書き方に迷ったらここを見る。
+#   python figgen.py examples/全ブロック.yaml
+
+title: figgen で使えるブロック
+subtitle: 見本。ここを写して中身を差し替える
+footer: tools/figgen/examples/全ブロック.yaml
+source: 使い方は tools/figgen/README.md
+width: 1600
+accent: blue
+
+blocks:
+  - type: banner
+    text: banner は [[全幅の帯]]。転回点や結論を **1行**で置く
+    note: note を書くと、点線の下に補足が付く
+
+  - type: steps
+    label: steps — 番号付きの横フロー
+    items:
+      - text: 集める
+        note: note はノードの下にぶら下がる
+      - text: 選ぶ
+        body: body は箱の中の小さい文字
+      - text: 組む
+
+  - type: chain
+    label: chain — 連鎖。矢印を強調したり、下を迂回させたりできる
+    tight: true
+    items:
+      - text: 一段目
+      - text: 二段目
+        arrow_label: ここが要
+        tone: accent
+      - text: 三段目
+        tone: dim
+      - text: 四段目
+        tone: dim
+    emphasis: [2]
+    bypass:
+      from: 1
+      to: 4
+      label: 飛ばされる経路
+
+  - type: columns
+    label: columns — N列のパネル。between で列の間に文字を置ける
+    columns:
+      - title: 左の案
+        badge: 出発点
+        items:
+          - text: lead を付けると太字になる
+            tone: lead
+          - ふつうの項目
+          - text: warn を付けると赤くなる
+            tone: warn
+        ft: ft は下の注記
+      - title: 右の案
+        tone: accent
+        items:
+          - tone に accent を付けると枠がアクセント色になる
+        ft: 列の高さは自動で揃う
+    between:
+      - text: "AとBの差\nほぼ別物"
+        value: "0.168"
+
+  - type: metrics
+    label: metrics — 数字を並べる
+    items:
+      - value: "0.418"
+        label: 一致度
+        caption: 1.0 で完全に同じ
+        tone: accent
+      - value: "49/50"
+        label: 箱の充足
+      - value: "1件"
+        label: はみ出し
+        tone: c2
+
+  - type: table
+    label: table — 表
+    headers: [案, 箱の数, はみ出し]
+    align: [text, num, num]
+    rows:
+      - [3箱, "3", "4件"]
+      - [10箱, "10", { text: "1件", em: true }]
+
+  - type: callout
+    label_in: callout
+    text: 一番言いたいことを1枚で置く
+    body: tone に warn か plain を付けると色が変わる
+
+  - type: note
+    text: note — 小さい注記。限界や但し書きはここに置く

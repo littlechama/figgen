@@ -1,0 +1,340 @@
+/* figgen のテーマ。ここを直せば全部の図の見た目が変わる。
+   色は dataviz スキルの検証済みパレット（validate_palette.js を通したもの）。
+   カテゴリ色は blue → orange の順で固定。順番を入れ替えない。 */
+
+:root {
+  --surface:     #fcfcfb;   /* 図の地色 */
+  --panel:       #ffffff;   /* パネルの地色 */
+  --panel-soft:  #f5f5f2;   /* 弱いパネル */
+  --ink:         #0b0b0b;   /* 主のインク */
+  --ink-2:       #52514e;   /* 副のインク */
+  --ink-3:       #898781;   /* 弱いインク。注記・軸 */
+  --line:        rgba(11, 11, 11, 0.10);
+  --line-2:      #e1e0d9;
+  --rule:        #c3c2b7;
+
+  --c1:          #2a78d6;   /* カテゴリ1 blue */
+  --c2:          #eb6834;   /* カテゴリ2 orange */
+  --c1-soft:     rgba(42, 120, 214, 0.10);
+  --c2-soft:     rgba(235, 104, 52, 0.10);
+  --warn:        #d03b3b;
+
+  --accent:      var(--c1);
+  --accent-soft: var(--c1-soft);
+
+  --r:           12px;
+  --r-lg:        16px;
+}
+
+/* accent の切り替え。spec の accent: orange で body に付く */
+body.accent-orange { --accent: var(--c2); --accent-soft: var(--c2-soft); }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: var(--w);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: "Yu Gothic UI", "Yu Gothic", "Hiragino Kaku Gothic ProN",
+               "Noto Sans JP", Meiryo, system-ui, sans-serif;
+  font-feature-settings: "palt" 1;
+  font-size: 17px;
+  line-height: 1.62;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+#fig { padding: 44px 52px 40px; }
+
+/* ---------- 見出し ---------- */
+
+.fig-head { margin-bottom: 30px; }
+.fig-head h1 {
+  font-size: 34px; line-height: 1.28; font-weight: 700; letter-spacing: 0.005em;
+}
+.fig-head .sub { margin-top: 8px; font-size: 16px; color: var(--ink-2); }
+.fig-head .rule { margin-top: 18px; height: 3px; width: 68px; background: var(--accent); border-radius: 2px; }
+
+.fig-foot {
+  margin-top: 34px; padding-top: 14px; border-top: 1px solid var(--line);
+  font-size: 13px; color: var(--ink-3); display: flex; gap: 18px; justify-content: space-between;
+}
+
+/* ---------- 共通 ---------- */
+
+.block { margin-bottom: 26px; }
+.block:last-child { margin-bottom: 0; }
+.block-label {
+  font-size: 13px; font-weight: 700; color: var(--ink-3);
+  letter-spacing: 0.08em; margin-bottom: 10px;
+}
+.muted { color: var(--ink-3); }
+b, strong { font-weight: 700; }
+code {
+  font-family: "Cascadia Mono", Consolas, monospace; font-size: 0.88em;
+  background: var(--panel-soft); padding: 1px 5px; border-radius: 4px;
+}
+.mark { color: var(--accent); font-weight: 700; }
+
+/* ---------- banner ---------- */
+
+.banner {
+  background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--accent);
+  border-radius: var(--r); padding: 20px 24px;
+}
+.banner .t { font-size: 22px; font-weight: 700; line-height: 1.45; }
+.banner .note {
+  margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line-2);
+  font-size: 14.5px; color: var(--ink-2);
+}
+.banner.plain { border-left-color: var(--rule); }
+
+/* ---------- steps / chain 共通のノード ---------- */
+
+.row { display: grid; column-gap: 56px; row-gap: 2px; align-items: stretch; }
+.row.tight { column-gap: 44px; }
+
+.node {
+  position: relative; background: var(--panel); border: 1.5px solid var(--rule);
+  border-radius: var(--r); padding: 15px 17px; min-height: 76px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.node .n {
+  font-size: 12px; font-weight: 700; color: var(--accent);
+  letter-spacing: 0.1em; margin-bottom: 5px;
+}
+.node .t { font-size: 16.5px; font-weight: 700; line-height: 1.45; }
+.node .b { margin-top: 6px; font-size: 14px; color: var(--ink-2); line-height: 1.55; }
+
+.node.accent { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.node.dim { border-style: dashed; border-color: var(--line-2); background: transparent; }
+.node.dim .t, .node.dim .b { color: var(--ink-3); }
+.node.soft { background: var(--panel-soft); border-color: var(--line); }
+
+/* ノード間の矢印。gap の中に置く */
+.node.arrow::after {
+  content: ""; position: absolute; top: 50%; right: -56px; width: 56px; height: 2px;
+  background: var(--rule); transform: translateY(-50%);
+}
+.node.arrow::before {
+  content: ""; position: absolute; top: 50%; right: -56px; z-index: 1;
+  border: 7px solid transparent; border-left-color: var(--rule);
+  border-right-width: 0; transform: translateY(-50%);
+}
+.row.tight .node.arrow::after { right: -44px; width: 44px; }
+.row.tight .node.arrow::before { right: -44px; }
+
+.node.arrow-strong::after { background: var(--accent); height: 3px; }
+.node.arrow-strong::before { border-left-color: var(--accent); border-width: 8px; }
+
+/* 矢印に添えるラベル */
+.node .arrow-label {
+  position: absolute; top: 50%; right: -56px; width: 56px;
+  transform: translate(0, -50%); margin-top: -34px;
+  font-size: 12.5px; line-height: 1.35; text-align: center; color: var(--accent);
+  font-weight: 700; white-space: normal; word-break: keep-all;
+}
+.node .arrow-label.wide { width: 168px; right: -112px; }
+.row.has-labels { margin-top: 42px; }
+.row.has-labels .node .arrow-label { margin-top: -44px; }
+
+/* ノードにぶら下げる注記 */
+.node-note {
+  margin-top: 12px; padding-left: 13px; border-left: 2px dashed var(--line-2);
+  font-size: 13.5px; line-height: 1.55; color: var(--ink-2);
+}
+.node-note:empty { border-left: none; }
+
+/* 迂回の矢印（下を通す点線） */
+.bypass { position: relative; height: 46px; margin-top: 4px; }
+.bypass svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.bypass .lab {
+  position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%);
+  font-size: 13px; color: var(--ink-3); background: var(--surface); padding: 0 8px;
+}
+
+/* ---------- columns ---------- */
+
+.cols { display: grid; gap: 20px; align-items: stretch; }
+.col {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.col > .hd {
+  padding: 13px 18px 12px; border-bottom: 1px solid var(--line);
+  background: var(--panel-soft);
+}
+.col > .hd .t { font-size: 18px; font-weight: 700; }
+.col > .hd .badge {
+  display: inline-block; margin-left: 8px; padding: 1px 9px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; color: var(--ink-2);
+  background: var(--surface); border: 1px solid var(--line);
+}
+.col > .bd { padding: 15px 18px 16px; }
+.col.accent { border-color: var(--accent); }
+.col.accent > .hd { background: var(--accent-soft); }
+.col.accent > .hd .t { color: var(--accent); }
+
+.col ul { list-style: none; }
+.col li {
+  position: relative; padding-left: 16px; font-size: 14.5px; line-height: 1.6;
+  margin-bottom: 7px; color: var(--ink-2);
+}
+.col li:last-child { margin-bottom: 0; }
+.col li::before {
+  content: ""; position: absolute; left: 0; top: 0.68em;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--rule);
+}
+.col li.lead { color: var(--ink); font-weight: 700; font-size: 15.5px; }
+.col li.lead::before { background: var(--accent); }
+.col li.warn { color: var(--warn); }
+.col li.warn::before { background: var(--warn); }
+.col .ft {
+  margin-top: 12px; padding-top: 11px; border-top: 1px dashed var(--line-2);
+  font-size: 13.5px; line-height: 1.55; color: var(--ink-3);
+}
+.col-between {
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font-size: 13px; font-weight: 700; color: var(--ink-3); line-height: 1.5;
+  align-self: center; max-width: 130px;
+}
+.col-between .v {
+  margin-top: 4px; font-size: 26px; color: var(--ink); letter-spacing: -0.01em;
+}
+
+/* ---------- callout ---------- */
+
+.callout {
+  border-radius: var(--r); padding: 17px 22px;
+  background: var(--accent-soft); border: 1px solid var(--accent);
+}
+.callout .lb {
+  font-size: 12.5px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--accent); margin-bottom: 5px;
+}
+.callout .t { font-size: 17px; line-height: 1.6; font-weight: 700; }
+.callout .b { margin-top: 7px; font-size: 14px; color: var(--ink-2); line-height: 1.6; }
+.callout.plain { background: var(--panel-soft); border-color: var(--line); }
+.callout.plain .lb { color: var(--ink-3); }
+.callout.warn { background: rgba(208, 59, 59, 0.07); border-color: var(--warn); }
+.callout.warn .lb { color: var(--warn); }
+
+/* ---------- metrics ---------- */
+
+.metrics { display: grid; gap: 18px; }
+.metric {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 15px 18px 16px; text-align: center;
+}
+.metric .v { font-size: 40px; font-weight: 700; line-height: 1.1; letter-spacing: -0.01em; }
+.metric .l { margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.metric .c { margin-top: 5px; font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }
+.metric.accent { border-color: var(--accent); }
+.metric.accent .v { color: var(--accent); }
+.metric.c2 { border-color: var(--c2); }
+.metric.c2 .v { color: var(--c2); }
+
+/* ---------- table ---------- */
+
+table {
+  width: 100%; border-collapse: collapse; background: var(--panel);
+  border: 1px solid var(--line); border-radius: var(--r); overflow: hidden;
+}
+th, td {
+  padding: 10px 14px; text-align: left; font-size: 14.5px; line-height: 1.5;
+  border-bottom: 1px solid var(--line-2);
+}
+th { background: var(--panel-soft); font-weight: 700; font-size: 13.5px; color: var(--ink-2); }
+tr:last-child td { border-bottom: none; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.em { font-weight: 700; color: var(--accent); }
+
+/* ---------- note ---------- */
+
+.note-block {
+  font-size: 13.5px; line-height: 1.65; color: var(--ink-3);
+  padding-left: 14px; border-left: 2px solid var(--line-2);
+}
+
+/* ---------- scatter ---------- */
+
+.scatter { display: grid; gap: 20px; align-items: center; }
+.scatter .field {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: 12px 14px 14px;
+}
+.scatter .field .t { font-size: 15.5px; font-weight: 700; margin-bottom: 2px; }
+.scatter .field .c { font-size: 13px; color: var(--ink-3); margin-bottom: 8px; }
+.scatter .field.c1 .t { color: var(--c1); }
+.scatter .field.c2 .t { color: var(--c2); }
+.scatter .mid { text-align: center; }
+.scatter .mid .v { font-size: 44px; font-weight: 700; line-height: 1.05; }
+.scatter .mid .l { margin-top: 6px; font-size: 13.5px; font-weight: 700; color: var(--ink-2); }
+.scatter .gauge {
+  margin: 12px auto 0; width: 100%; height: 6px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--line-2), var(--rule));
+  position: relative;
+}
+.scatter .gauge .pin {
+  position: absolute; top: -4px; width: 3px; height: 14px; border-radius: 2px; background: var(--ink);
+}
+.scatter .gauge .end {
+  position: absolute; top: 12px; font-size: 11.5px; color: var(--ink-3); white-space: nowrap;
+}
+.scatter .mid .c { margin-top: 26px; font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }
+
+/* ---- swimlane: 担当を行、作業の順序を列に置く図 ---- */
+.swim { position: relative; }
+.swim-grid { position: relative; }
+.swim-band {
+  position: absolute; left: 0; right: 0; background: var(--panel-soft);
+  border-radius: var(--r); border: 1px solid var(--line);
+}
+.swim-band.alt { background: transparent; }
+.swim-name {
+  position: absolute; left: 0; display: flex; align-items: center;
+  font-size: 13.5px; font-weight: 700; color: var(--ink-2);
+  letter-spacing: 0.06em; padding-right: 14px;
+}
+.swim-cells { position: absolute; top: 0; }
+.swim-node-wrap { position: absolute; }
+.swim-node-wrap .node { height: 100%; min-height: 0; padding: 12px 14px; }
+.swim-node-wrap .node .t { font-size: 15px; }
+.swim-svg { position: absolute; overflow: visible; }
+.swim-loop-lab { font-size: 12.5px; fill: var(--ink-3); font-weight: 600; }
+.swim-head {
+  position: absolute; width: 0; height: 0; border: 6px solid transparent;
+}
+.swim-head.right { border-left-color: var(--rule); transform: translate(-2px, -6px); }
+.swim-head.up    { border-bottom-color: var(--ink-3); transform: translate(-6px, -2px); }
+.swim-head.down  { border-top-color: var(--ink-3); transform: translate(-6px, -10px); }
+
+/* boxgraph — 層に並べた箱と、箱をつなぐ辺 */
+.bg-wrap { position: relative; margin: 0 auto; }
+.bg-band {
+  position: absolute; border: 1px dashed var(--line-2); border-radius: var(--r-lg);
+  background: var(--panel-soft);
+}
+.bg-band .bl {
+  position: absolute; top: -10px; left: 16px; padding: 0 9px; background: var(--surface);
+  font-size: 13px; font-weight: 700; color: var(--ink-3); letter-spacing: 0.08em;
+}
+.bg-svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.bg-path { fill: none; stroke: var(--rule); stroke-width: 2; }
+.bg-path.accent { stroke: var(--accent); stroke-width: 2.8; }
+.bg-path.dim { stroke-dasharray: 6 5; opacity: 0.75; }
+.bg-elab { font-size: 12.5px; fill: var(--ink-2); font-weight: 600; }
+.bg-elab-bg { fill: var(--surface); }
+.bg-node {
+  position: absolute; background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 12px 14px; display: flex; flex-direction: column;
+  gap: 5px; justify-content: center;
+}
+.bg-node.accent { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.bg-node.dim { border-style: dashed; color: var(--ink-3); background: transparent; }
+.bg-node .t { font-size: 17px; font-weight: 700; line-height: 1.3; }
+.bg-node .b { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.bg-badge {
+  position: absolute; top: -11px; right: 12px; padding: 1px 9px; border-radius: 999px;
+  background: var(--accent); color: #fff; font-size: 12.5px; font-weight: 700;
+}
