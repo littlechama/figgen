@@ -34,6 +34,11 @@ figgen だけが無い状態になった（実際になった）。knowledge 側
 ここに置けば clone した時点で揃う。`assets/figgen-theme.md` の `source_path` も
 ここを指している（コピーではなく実体への参照）。
 
-`tools/design_hub` もサムネイル生成で figgen を import している。
-場所は `paths.figgen_dir()` の1か所だけが知っているので、
-移動するときはそこを直す。
+## 描画は figgen の外にある
+
+「HTML を Chrome で撮って PNG にする」は図とは別の関心事なので、
+[`../html2png.py`](../html2png.py) に出してある。figgen はそれを使う側。
+
+`tools/design_hub` も同じものを使う。以前は figgen を丸ごと import していたが、
+実際に呼ぶのは67行で、引きずり込む867行のうち661行（`blocks.py` の図のDSL）は
+1つも使っていなかった。今は design_hub は figgen を読み込まない。

@@ -20,11 +20,7 @@ Chromeの場所を変えたいときは環境変数 FIGGEN_CHROME。
 from __future__ import annotations
 
 import argparse
-import os
-import shutil
-import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import yaml
@@ -32,15 +28,12 @@ import yaml
 sys.path.insert(0, str(Path(__file__).parent))
 import blocks as B  # noqa: E402
 
+# 「HTMLを撮る」は図とは別の関心事なので隣（tools/html2png.py）に出してある。
+# design_hub もそれを直接使う（以前はここを丸ごと import していた）。
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from html2png import crop_to_content, find_chrome, render  # noqa: E402,F401
+
 HERE = Path(__file__).parent
-CHROME_CANDIDATES = [
-    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-    r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-    r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-    "/usr/bin/google-chrome", "/usr/bin/chromium",
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-]
 
 PAGE = """<!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><title>{title}</title>
@@ -55,16 +48,6 @@ PAGE = """<!doctype html>
 {foot}
 </div></body></html>
 """
-
-
-def find_chrome() -> str | None:
-    env = os.environ.get("FIGGEN_CHROME")
-    if env and Path(env).exists():
-        return env
-    for c in CHROME_CANDIDATES:
-        if Path(c).exists():
-            return c
-    return shutil.which("chrome") or shutil.which("chromium") or shutil.which("msedge")
 
 
 def build_html(spec: dict, base: Path) -> str:
@@ -94,63 +77,6 @@ def build_html(spec: dict, base: Path) -> str:
         body=B.render_blocks(spec.get("blocks"), ctx),
         foot=foot,
     )
-
-
-def crop_to_content(png: Path, bg=(252, 252, 251), pad_px: int = 0) -> tuple[int, int, bool]:
-    """下側の余白を切る。返り値は (幅, 高さ, あふれたか)。
-
-    注意: 地色 #fcfcfb とパネルの白 #ffffff の差はわずか3しかない。許容差を広く取ると
-    白パネルの中の文字が無い帯まで「余白」と判定してしまい、画面外へあふれた内容を
-    黙って切り落とす。だから許容差は1に絞り、地色そのものの行だけを余白とみなす。
-    あふれの判定も、切り取り後の高さではなく「下端の行が地色か」で見る。
-    """
-    from PIL import Image
-
-    im = Image.open(png).convert("RGB")
-    w, h = im.size
-    px = im.load()
-    step = max(1, w // 400)
-
-    def is_bg_row(y: int) -> bool:
-        for x in range(0, w, step):
-            r, g, b = px[x, y]
-            if abs(r - bg[0]) > 1 or abs(g - bg[1]) > 1 or abs(b - bg[2]) > 1:
-                return False
-        return True
-
-    last = 0
-    for y in range(h - 1, -1, -1):
-        if not is_bg_row(y):
-            last = y
-            break
-    overflowed = not is_bg_row(h - 1)
-
-    if last and last < h - 2:
-        im.crop((0, 0, w, min(h, last + 1 + pad_px))).save(png)
-        return w, min(h, last + 1 + pad_px), overflowed
-    return w, h, overflowed
-
-
-def render(html_path: Path, out: Path, width: int, scale: float, tall: int) -> None:
-    chrome = find_chrome()
-    if not chrome:
-        raise SystemExit("Chrome も Edge も見つからない。FIGGEN_CHROME で場所を指定する。")
-    with tempfile.TemporaryDirectory() as tmp:
-        cmd = [
-            chrome, "--headless=new", "--disable-gpu", "--hide-scrollbars",
-            "--no-sandbox", "--disable-lcd-text",
-            f"--user-data-dir={tmp}",
-            f"--force-device-scale-factor={scale}",
-            f"--window-size={width},{tall}",
-            f"--screenshot={out}",
-            "--virtual-time-budget=3000",
-            html_path.as_uri(),
-        ]
-        # Chrome の出力は cp932 で読めないことがあるので、明示的に utf-8 で受ける
-        p = subprocess.run(cmd, capture_output=True, text=True,
-                           encoding="utf-8", errors="replace")
-    if not out.exists():
-        raise SystemExit(f"描画に失敗した:\n{p.stderr[-1200:]}")
 
 
 def one(spec_path: Path, args) -> None:

@@ -58,13 +58,13 @@ def check_packages() -> tuple[list[str], list[str]]:
 
 
 def check_chrome() -> tuple[str | None, str]:
-    """figgen 本体の探索をそのまま使う。ここで別に書くと片方だけ直って食い違う。"""
-    sys.path.insert(0, str(HERE))
+    """探索の実物（tools/html2png.py）をそのまま使う。ここで別に書くと片方だけ直って食い違う。"""
+    sys.path.insert(0, str(HERE.parent))
     try:
-        import figgen  # noqa: E402
+        import html2png  # noqa: E402
     except ImportError as e:
-        return None, f"  ×    figgen.py を読めない — {e}"
-    chrome = figgen.find_chrome()
+        return None, f"  ×    tools/html2png.py を読めない — {e}"
+    chrome = html2png.find_chrome()
     if not chrome:
         return None, "  無い Chrome / Edge が見つからない → 環境変数 FIGGEN_CHROME で実行ファイルを指す"
     return chrome, f"  OK   Chrome   {chrome}"
