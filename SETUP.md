@@ -2,7 +2,7 @@
 
 ```bash
 pip install pyyaml pillow
-python knowledge/tools/figgen/doctor.py
+python doctor.py          # リポジトリの直下で
 ```
 
 `doctor.py` は足りないものを挙げたうえで、**見本を1枚実際に描いて確かめる**。
@@ -22,24 +22,13 @@ python knowledge/tools/figgen/doctor.py
 
 `pip` 以外は要らない。npm もビルドも無い。
 
-## なぜ knowledge の中にあるのか
-
-**2026-08-11 に `Life/tools/figgen` からここへ移した。**
-
-元の場所はバージョン管理外だったので、別のPCで knowledge を clone しても
-figgen だけが無い状態になった（実際になった）。knowledge 側は AGENTS.md・
-`skills/` の3本・`assets/figgen-theme.md` から figgen を参照していて、
-**依存だけがあって実体が無い**という形だった。
-
-ここに置けば clone した時点で揃う。`assets/figgen-theme.md` の `source_path` も
-ここを指している（コピーではなく実体への参照）。
-
 ## 描画は別ファイル・ただし中にある
 
 「HTML を Chrome で撮って PNG にする」は図とは別の関心事なので、
 [`src/figgen/html2png.py`](src/figgen/html2png.py) に分けてある。figgen はそれを使う側。
 
-`tools/design_hub` も同じものを使う。以前は figgen を丸ごと import していたが、
+作者の持っている別の道具（`design_hub`。スクリーンショットを撮る用途）も同じものを使う。
+そちらは以前 figgen を丸ごと import していたが、
 実際に呼ぶのは67行で、引きずり込む867行のうち661行（`blocks.py` の図のDSL）は
 1つも使っていなかった。今も design_hub が読むのは `html2png` だけで、`blocks.py` は
 読み込まない。**関心事の分離はファイルを分けることで保たれていて、

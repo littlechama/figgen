@@ -151,7 +151,13 @@ PNGは生成物」という道具なので、直すときは YAML を1行変え�
 
 ## 置き場所の約束
 
-道具はここ（`tools/figgen/`）に置き、**図の仕様は使う側のプロジェクトに置く**。
+**図の仕様（`.yaml`）は、その図を使うプロジェクトの側に置く。** この道具の中には置かない。
 仕様はプロジェクトの資料であって、道具の一部ではないため。
 
-例: `research/survey_thema/verbalization/0727/figures/*.yaml`
+```
+your-project/
+  docs/figures/アーキテクチャ.yaml     ← 仕様はここ。図と一緒に版が進む
+  docs/figures/アーキテクチャ.png      ← 生成物
+```
+
+生成された `.html` と `.png` は生成物なので手で編集しない。直すのは `.yaml` か `theme.css`。
