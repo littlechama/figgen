@@ -1,0 +1,37 @@
+title: 変更がリリースに届くまで
+subtitle: 横並びの連鎖。**強調する矢印と、下を迂回する矢印を自分で指定できる**
+footer: figgen / chain ブロック
+width: 1700
+accent: orange
+
+blocks:
+  - type: chain
+    emphasis: [4]
+    bypass: {from: 1, to: 5, label: hotfix は直行する}
+    items:
+      - {text: 変更, body: 手元で書く}
+      - {text: CI, body: 自動で落ちるものを落とす, arrow_label: 通れば}
+      - {text: レビュー, body: 人が読む, arrow_label: 指摘}
+      - {text: 修正, body: 直して出し直す, arrow_label: 合意}
+      - {text: リリース, body: 世に出る, tone: accent}
+
+  - type: spacer
+    h: 8
+
+  - type: columns
+    label: 配置を自分で決めるとはどういうことか
+    columns:
+      - title: レイアウトエンジンに任せる
+        badge: mermaid / PlantUML
+        items:
+          - 書くのは関係だけ。速い
+          - "**どこに置くかは選べない**"
+          - 要素を足すと全体が動く
+        ft: 構造を確かめるには十分
+      - title: 自分で決める
+        badge: figgen
+        items:
+          - 並び・レーン・強調を指定する
+          - "**人に見せる図で効く**"
+          - 直した所だけが変わる
+        ft: 資料に貼る図はこちら

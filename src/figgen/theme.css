@@ -35,8 +35,11 @@ body {
   width: var(--w);
   background: var(--surface);
   color: var(--ink);
+  /* Linux/Docker では Yu Gothic も Hiragino も無い。fonts-noto-cjk が入れる実体名は
+     "Noto Sans CJK JP" で、Google Fonts 名の "Noto Sans JP" とは別物。両方書かないと
+     豆腐になる（「文字が崩れない」が売りの道具なので、ここが崩れると何も残らない）。 */
   font-family: "Yu Gothic UI", "Yu Gothic", "Hiragino Kaku Gothic ProN",
-               "Noto Sans JP", Meiryo, system-ui, sans-serif;
+               "Noto Sans JP", "Noto Sans CJK JP", Meiryo, system-ui, sans-serif;
   font-feature-settings: "palt" 1;
   font-size: 17px;
   line-height: 1.62;

@@ -1,6 +1,11 @@
 # figgen — AIの入口
 
-説明図を作る道具。使い方の全部は [README.md](README.md) にある。ここはAIが作業に入るときの注意だけ。
+説明図を作る道具。使い方は [README.md](README.md)、**YAML方言の正本は
+[`src/figgen/BLOCKS.md`](src/figgen/BLOCKS.md)**（キー・記法・落とし穴・禁じ手）。
+ここはAIがこのリポジトリで作業に入るときの注意だけ。
+
+MCP 経由（`figgen_blocks`）で返るのも BLOCKS.md と同じ中身なので、
+方言の話はそちらを直す。ここには書き写さない。
 
 ## 何をする道具か
 
@@ -10,7 +15,7 @@ YAMLの仕様 → HTML/CSS → Chrome で描画 → PNG。画像生成モデル�
 
 1. **まず既存の仕様を見る。** 似た図があれば真似る。`research/*/verbalization/*/figures/*.yaml`
 2. 仕様のYAMLを、**その図を使うプロジェクト側**に書く。この道具のディレクトリには置かない
-3. `python figgen.py <spec>.yaml` で出す
+3. `python draw.py <spec>.yaml` で出す（pip で入れてあるなら `figgen <spec>.yaml`）
 4. **必ず出たPNGを開いて見る。** CSSは検証しないので、はみ出し・重なりは目で見るしかない
 5. 直すのは仕様のYAMLか `theme.css`。生成された `.html` と `.png` は生成物なので手で編集しない
 

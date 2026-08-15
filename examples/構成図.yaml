@@ -1,0 +1,39 @@
+title: figgen の中身
+subtitle: 層に並べた箱と、箱をつなぐ辺。**箱にも辺にもラベルと数字を載せられる**
+footer: figgen / boxgraph ブロック
+source: 行数は wc -l の実測（2026-08-15）
+width: 1700
+accent: blue
+
+blocks:
+  - type: boxgraph
+    node_w: 210
+    col_gap: 118
+    layers:
+      - id: 入力
+        nodes:
+          - {id: yaml, text: 図.yaml, body: どこに何を置くかの仕様}
+      - id: 組み立て
+        nodes:
+          - {id: cli, text: cli.py, body: 仕様を読んでHTMLにする, badge: "138行"}
+          - {id: blocks, text: blocks.py, body: ブロック13種の描画, badge: "661行"}
+          - {id: theme, text: theme.css, body: 色・余白・字を1枚に集約, badge: "343行"}
+      - id: 描画
+        nodes:
+          - {id: h2p, text: html2png.py, body: Chromeを呼ぶだけ, badge: "103行"}
+          - {id: chrome, text: Chrome, body: headless で撮る}
+      - id: 出力
+        nodes:
+          - {id: png, text: 図.png, body: 文字はテキストのまま}
+    edges:
+      - {from: yaml, to: cli, label: 読む}
+      - {from: cli, to: blocks, label: ブロックごとに描く}
+      - {from: blocks, to: theme, label: クラス名で見た目を指す}
+      - {from: cli, to: h2p, label: 組み上がったHTML}
+      - {from: h2p, to: chrome, label: 起動}
+      - {from: chrome, to: png, label: スクリーンショット, tone: accent}
+
+  - type: note
+    text: >
+      **画像生成モデルは使わない。** 文字を画像として焼かないので、日本語が崩れず、
+      `scale` を上げれば解像度も自由に伸びる。

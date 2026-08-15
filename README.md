@@ -3,14 +3,48 @@
 スライドや報告に貼る説明図を、YAMLの仕様1枚から作る。文字は画像として焼かず、
 レイアウトはHTML/CSSで持ち、描画だけを Chrome に任せる。
 
-```
-python figgen.py 図.yaml          # 同じ場所に 図.png と 図.html を出す
-python figgen.py 図.yaml --html   # HTMLだけ（速い。中身の確認用）
-python figgen.py fig*.yaml        # まとめて
+```bash
+pip install figgen
 ```
 
-必要なもの: Python（PyYAML・Pillow）と Chrome か Edge。npm も pip install も要らない。
-Chromeの場所を変えたいときは環境変数 `FIGGEN_CHROME`。
+```bash
+figgen 図.yaml          # 同じ場所に 図.png と 図.html を出す
+figgen 図.yaml --html   # HTMLだけ（速い。中身の確認用）
+figgen fig*.yaml        # まとめて
+```
+
+clone しただけで動かすなら `python draw.py 図.yaml`（中身は同じ）。
+
+必要なもの: Python 3.9以上 と **Chrome か Edge**。npm もビルドも要らない。
+Chrome は描画にだけ使う（pip では入らないので、無ければ入れる）。
+場所を変えたいときは環境変数 `FIGGEN_CHROME`。
+
+```bash
+python doctor.py    # 足りないものを挙げ、見本を1枚実際に描いて確かめる
+```
+
+**「入っているか」を数えるだけの点検はしない。** 最後に必ず1枚描かせて、
+`figgen は使える。` が出れば本当に使える。
+
+## 何が出るか
+
+**担当ごとのレーンに分けた流れ。** レーンの並び順は書いた順で、
+レーンをまたぐ矢印は直角に折れる。戻る矢印（`loops`）も自分で指定する。
+
+![スイムレーン](examples/スイムレーン.png)
+
+**層に並べた箱と、その継ぎ目。** 箱にも辺にもラベルと数字を載せられるので、
+「どこが太いか」をあとから重ねられる。
+
+![構成図](examples/構成図.png)
+
+**強調する矢印と、下を迂回する矢印。** どの矢印を太くするか、
+どこからどこへ近道を引くかを、こちらが決める。
+
+![連鎖](examples/連鎖.png)
+
+仕様はそれぞれ [`examples/`](examples/) にある。**全13ブロックを1枚に並べた見本**は
+[`examples/全ブロック.yaml`](examples/全ブロック.yaml)。
 
 ## なぜ作ったか
 
@@ -47,112 +81,59 @@ Markdownを全部通すと図の中で崩れるので、意図的にこれだけ
 
 ## ブロック一覧
 
-| type | 何を出すか | 主なキー |
-|---|---|---|
-| `banner` | 全幅の帯。転回点や結論を1行で | `text` `note` `tone: plain` |
-| `steps` | 番号付きの横フロー | `items[].text` `.body` `.note` |
-| `chain` | 横並びの連鎖。矢印つき | `items[]` `emphasis: [3]` `bypass` `tight` |
-| `columns` | N列のパネル | `columns[].title` `.badge` `.items` `.ft` `between` |
-| `callout` | 強調の1枚 | `text` `body` `label_in` `tone: warn/plain` |
-| `metrics` | 大きな数字の並び | `items[].value` `.label` `.caption` |
-| `table` | 表 | `headers` `rows` `align` |
-| `note` | 小さい注記 | `text` |
-| `swimlane` | 担当（レーン）を行、作業の順序を列に置く | `lanes[]` `items[].lane` `loops[]` `row_h` `label_width` `numbered` |
-| `boxgraph` | 層に並べた箱と、箱をつなぐ辺 | `layers[].nodes[]` `edges[]` `node_w` `col_gap` `bottom_pad` |
-| `graph_pair` | 2つのグラフ（ノード＋辺）を並べる | `data` `left.panel` `right.panel` `center` `field_width` `field_height` |
-| `scatter_pair` | 同じ点集合を2通りに囲う | `data` `left` `right` `center` |
-| `spacer` | 余白 | `h` |
+| type | 何を出すか |
+|---|---|
+| `banner` | 全幅の帯。転回点や結論を1行で |
+| `steps` | 番号付きの横フロー |
+| `chain` | 横並びの連鎖。矢印つき。強調と迂回を指定できる |
+| `columns` | N列のパネル。2案の比較に |
+| `callout` | 強調の1枚 |
+| `metrics` | 大きな数字の並び |
+| `table` | 表 |
+| `note` | 小さい注記 |
+| `swimlane` | 担当（レーン）を行、作業の順序を列に置く |
+| `boxgraph` | 層に並べた箱と、箱をつなぐ辺。箱にも辺にもラベルと数字が載る |
+| `graph_pair` | 2つのグラフ（ノード＋辺）を並べる |
+| `scatter_pair` | 同じ点集合を2通りに囲う |
+| `spacer` | 余白 |
 
-共通で `label`（ブロックの上に出る小見出し）が使える。
+**各ブロックのキー・記法・落とし穴は
+[`src/figgen/BLOCKS.md`](src/figgen/BLOCKS.md) にまとまっている。**
+ここが YAML 方言の正本で、MCP の `figgen_blocks` もこれを返す
+（同じことを2か所に書くと必ず片方が古くなるため、一本にしてある）。
 
-### chain の矢印
+## AIエージェントから使う（MCP）
 
-- `items[i].arrow_label` … その矢印の上に出るラベル
-- `emphasis: [3]` … 3番目の右の矢印を太くアクセント色にする（1始まり）
-- `bypass: {from: 2, to: 5, label: "..."}` … 下を迂回する点線の矢印
-- `items[i].tone` … `accent`（強調）／ `dim`（破線・スコープ外）／ `soft`
+**figgen の弱点は「独自YAML方言を13ブロックぶん覚えないと書けない」ことだった。**
+MCP 越しに使うなら覚えるのはエージェントなので、その弱点が消える。
+人は「こういう図が欲しい」と言うだけでよくなる。
 
-### swimlane
-
-担当を行に、作業の順序を列に置く。`items[i].lane` でどの行かを決め、`lanes` で行の順を決める。
-矢印は隣り合う作業の間に自動で引かれ、**レーンをまたぐときは直角に折れる**。
-
-```yaml
-- type: swimlane
-  lanes: [学生, システム]
-  numbered: true
-  row_h: 152            # 1レーンの高さ
-  label_width: 116      # 左のレーン名の幅
-  items:
-    - {lane: 学生, text: 資料を出す, body: "[[段1]] 手元の資料をテキストで置く"}
-  loops:
-    - {from: 6, to: 5, label: 別の材料を見る, side: below}   # 1始まり。side は below（既定）か above
+```bash
+pip install "figgen[mcp]"     # MCPサーバーは Python 3.10 以上
 ```
 
-- **⚠ `note` は出ない。** `_node()` が描画するのは `n` / `text` / `body` / `arrow_label` だけ。`.node-note` の
-  CSS はあるが `chain` と `swimlane` の項目では使われない。**書いても黙って消える。**
-  ラベルを添えたいときは `body` の頭に `[[...]]`（アクセント色）を入れる
-- **⚠ 1項目＝1列。列幅 = 1000/n。** 項目を増やすと横に潰れる。`width: 1900` で10項目のとき
-  1列 ≈178px、ノード実幅 ≈143px で、**本文は20字以内でないと箱からはみ出す**。10項目が上限の目安
-
-### boxgraph
-
-構造そのものを描くとき（設計図の箱と、その継ぎ目）。`graph_pair` と違い、ノードに名前と説明文が付き、
-辺にラベルが付く。**箱と辺の両方に `badge` を載せられる**ので、あとから件数や判定を重ねられる。
-
-```yaml
-- type: boxgraph
-  layers:
-    - id: 背景
-      nodes:
-        - {id: 意義, text: 意義, body: なぜ重要とされているか, badge: "14件"}
-  edges:
-    - {from: 意義, to: 欠落, label: 重要なのに解けていないか, badge: "0件", tone: accent}
-```
-
-- 層は左から右へ並び、層の中のノードは縦に積む。座標は自動
-- 辺は3通りに自動で描き分ける。**前へ進む**（曲線）／**同じ層の中**（縦の直線）／**戻る**（下を回る点線状の弧）
-- `tone` は `accent`（強調）／ `dim`（破線・外す候補）
-- 端点に無いIDを書くとエラーで止まる（黙って消えない）
-
-### graph_pair のデータ
-
-グラフをそのまま描く。ノードは番号つきの丸、辺は線で、濃さは重み。どこにも繋がらないノードは
-灰色の輪郭になる。左右で座標系が違ってよい（枠ごとに別のレイアウトで置いた場合）。番号が
-枠をまたいで共通なら、同じ論文を左右で追える。
+Claude Code / Claude Desktop などの設定に足す:
 
 ```json
-{ "papers": {"p3": {"num": 4, "title": "..."}},
-  "panels": {
-    "significance": {
-      "title": "①意義",
-      "nodes":    [{"id": "p3", "x": 0.42, "y": 0.10}],   // x,y は 0〜1 に正規化済み
-      "edges":    [["p3", "p7", 0.31]],                    // [端, 端, 重み]
-      "clusters": [["p3","p7"], ["p1"]],
-      "n": 37, "n_edges": 33, "n_clusters": 13, "n_singleton": 7, "sizes": [20, 2, ...]
-    }}}
+{
+  "mcpServers": {
+    "figgen": { "command": "figgen-mcp" }
+  }
+}
 ```
 
-`caption` を省くと `37本・33辺・13かたまり（最大20本、…単独が7本）` を自動で出す。数え直しの
-手間と食い違いを避けるため、**数えられるものは仕様に書かずデータから出す**。
+道具は2つだけ。
 
-**凸包の囲い（`hulls: true`）は既定で切ってある。** 凸包はそのかたまりに属さないノードまで
-囲ってしまい、「この袋の中は同じかたまり」という誤読を生むため。かたまりは辺で読ませる。
+| 道具 | 何をするか |
+|---|---|
+| `figgen_blocks` | YAML方言（全13ブロックのキー・記法・落とし穴）を返す。**図を書く前に呼ぶ** |
+| `figgen_render` | YAMLの仕様を PNG にする。仕様は `.yaml` として隣に残る |
 
-### scatter_pair のデータ
+`figgen_render` は PNG と一緒に**仕様の `.yaml` を残す**。figgen は「YAMLが正本、
+PNGは生成物」という道具なので、直すときは YAML を1行変えて呼び直す。
 
-グラフの構造が要らず、点と囲いだけでよいとき。
-
-```json
-{ "points":    [{"id": "p0", "x": 0.1, "y": -0.4}, ...],
-  "groupings": {"significance": {"clusters": [["p0","p3"], ["p1"], ...]}} }
-```
-
-点の位置は左右で共通で、`clusters` だけが違う前提。上の誤読の問題があるので、使う前に
-「囲いに入っていない点が袋の中に来ないか」を必ず出力で確かめること。
-
-作る側の例: `research/survey_thema/analysis/theme_box_analysis/scripts/export_grouping.py`。
-分析スクリプトの関数をそのまま呼んでJSONにしているので、分析を直せば図も変わる。
+> **出た PNG は必ず開いて見ること。** CSS は検証しないので、はみ出し・重なりは
+> 見ないと分からない。縦のあふれは警告が出るが、**横のあふれは黙って出る**。
 
 ## 色
 

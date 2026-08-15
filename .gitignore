@@ -1,0 +1,11 @@
+# ビルドの生成物（pip install / python -m build で出る）
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# 図の生成物。仕様（.yaml）だけが正本で、.html と .png は再生成できる。
+# ただし examples/ の出力は README に貼る見本なので、そちらは追跡する
+examples/*.html
+!examples/*.yaml

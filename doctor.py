@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""setup.py — 新しいPCで figgen が動くところまで持っていく。
+"""doctor.py — 新しいPCで figgen が動くところまで持っていく。
 
 やること:
   1. 足りない部品を挙げる（PyYAML / Pillow / Chrome）
@@ -8,10 +8,15 @@
 「入っているか」を数えるだけの点検は当てにならない（入っていても Chrome が
 無ければ図は出ない）。だから最後に必ず1枚描かせる。ここが通れば本当に使える。
 
-    python knowledge/tools/figgen/setup.py            # 点検して1枚描く
-    python knowledge/tools/figgen/setup.py --quiet    # 結果だけ
+    python knowledge/tools/figgen/doctor.py            # 点検して1枚描く
+    python knowledge/tools/figgen/doctor.py --quiet    # 結果だけ
 
 Chrome が既定の場所に無いときは環境変数 FIGGEN_CHROME に実行ファイルを指す。
+
+2026-08-14 に `setup.py` から改名した。pip で配る器（pyproject.toml）を
+足すとき、リポジトリ直下の `setup.py` は**ビルドツールが setuptools の
+ビルドスクリプトとして解釈する**。これは点検の道具なので名前が衝突する。
+公開してから直すと利用者の手順が変わってしまうので、先に改名しておく。
 """
 
 from __future__ import annotations
@@ -58,12 +63,12 @@ def check_packages() -> tuple[list[str], list[str]]:
 
 
 def check_chrome() -> tuple[str | None, str]:
-    """探索の実物（tools/html2png.py）をそのまま使う。ここで別に書くと片方だけ直って食い違う。"""
-    sys.path.insert(0, str(HERE.parent))
+    """探索の実物（figgen/html2png.py）をそのまま使う。別に書くと片方だけ直って食い違う。"""
+    sys.path.insert(0, str(HERE / "src"))
     try:
-        import html2png  # noqa: E402
+        from figgen import html2png  # noqa: E402
     except ImportError as e:
-        return None, f"  ×    tools/html2png.py を読めない — {e}"
+        return None, f"  ×    figgen/html2png.py を読めない — {e}"
     chrome = html2png.find_chrome()
     if not chrome:
         return None, "  無い Chrome / Edge が見つからない → 環境変数 FIGGEN_CHROME で実行ファイルを指す"
@@ -82,7 +87,7 @@ def render_example() -> tuple[bool, str]:
         # 文字化けする。**失敗時にこそ本文を見たい**のに、そこで化けたり例外になったり
         # して本文が消える。子に UTF-8 で書かせたうえで UTF-8 で読む
         env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
-        r = subprocess.run([sys.executable, str(HERE / "figgen.py"), str(work)],
+        r = subprocess.run([sys.executable, str(HERE / "draw.py"), str(work)],
                            capture_output=True, text=True,
                            encoding="utf-8", errors="replace", env=env)
         png = work.with_suffix(".png")
@@ -130,7 +135,7 @@ def main() -> int:
         return 1
 
     print("figgen は使える。")
-    print(f"  python {HERE.as_posix()}/figgen.py 図.yaml")
+    print(f"  python {HERE.as_posix()}/draw.py 図.yaml")
     return 0
 
 

@@ -1,0 +1,38 @@
+title: AIに図を1枚描かせるまで
+subtitle: 担当を行に、順序を列に置く。**レーンをまたぐ矢印は直角に折れる**
+footer: figgen / swimlane ブロック
+width: 1700
+accent: blue
+
+blocks:
+  - type: swimlane
+    lanes: [人, エージェント, figgen]
+    numbered: true
+    row_h: 150
+    label_width: 120
+    items:
+      - lane: 人
+        text: 説明したいことを言う
+        body: "[[入口]] 図の種類は指定しない"
+      - lane: エージェント
+        text: 図の種類を決める
+        body: 流れか構造か比較か
+      - lane: エージェント
+        text: YAMLを書く
+        body: どこに何を置くかを決める
+      - lane: figgen
+        text: HTMLを組む
+        body: 見た目は theme.css
+      - lane: figgen
+        text: Chromeで描く
+        body: 文字は焼かずに置く
+      - lane: 人
+        text: PNGを目で見る
+        body: "[[必須]] はみ出しは見ないと分からない"
+    loops:
+      - {from: 6, to: 3, label: 1行直して描き直す, side: below}
+
+  - type: note
+    text: >
+      矢印は隣り合う作業の間に自動で引かれる。**レーンの並び順は書いた順**なので、
+      「誰が主役か」を上から決められる。配置エンジンに任せると、ここが毎回変わる。

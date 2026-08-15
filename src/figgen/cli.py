@@ -7,13 +7,15 @@
   文字はテキストのまま焼かずに置き、描画だけを Chrome に任せる。
 
 使い方:
-    python figgen.py spec.yaml                 # spec.yaml と同じ場所に .png と .html を出す
-    python figgen.py spec.yaml -o out.png
-    python figgen.py spec.yaml --html          # HTMLだけ作って描画しない（速い。確認用）
-    python figgen.py spec.yaml --scale 3       # 3倍解像度
-    python figgen.py spec/*.yaml               # まとめて
+    figgen spec.yaml                 # spec.yaml と同じ場所に .png と .html を出す
+    figgen spec.yaml -o out.png
+    figgen spec.yaml --html          # HTMLだけ作って描画しない（速い。確認用）
+    figgen spec.yaml --scale 3       # 3倍解像度
+    figgen spec/*.yaml               # まとめて
 
-必要なもの: Python（PyYAML, Pillow）と Chrome か Edge。npm も pip install も要らない。
+`python draw.py spec.yaml`（リポジトリ直下の入口）でも同じものが動く。
+
+必要なもの: Python（PyYAML, Pillow）と Chrome か Edge。npm は要らない。
 Chromeの場所を変えたいときは環境変数 FIGGEN_CHROME。
 """
 
@@ -25,13 +27,13 @@ from pathlib import Path
 
 import yaml
 
-sys.path.insert(0, str(Path(__file__).parent))
-import blocks as B  # noqa: E402
+from . import blocks as B
 
-# 「HTMLを撮る」は図とは別の関心事なので隣（tools/html2png.py）に出してある。
-# design_hub もそれを直接使う（以前はここを丸ごと import していた）。
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from html2png import crop_to_content, find_chrome, render  # noqa: E402,F401
+# 「HTMLを撮る」は図とは別の関心事だが、**実体はこのパッケージの中に置く**。
+# figgen を単体のリポジトリとして切り出せるようにするため、外を import しない。
+# 関心事の分離はファイルを分けることで保っている。design_hub は html2png だけを
+# import するので、図のDSL（blocks.py 661行）は今までどおり引きずり込まれない。
+from .html2png import crop_to_content, find_chrome, render  # noqa: F401
 
 HERE = Path(__file__).parent
 
@@ -79,20 +81,23 @@ def build_html(spec: dict, base: Path) -> str:
     )
 
 
-def one(spec_path: Path, args) -> None:
-    spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+def render_spec(spec_path: Path, out: str | Path | None = None,
+                scale: float | None = None, html_only: bool = False) -> Path:
+    """YAML 1枚を図にする。返り値は書き出した PNG（`html_only` のときは HTML）のパス。"""
+    spec = yaml.safe_load(Path(spec_path).read_text(encoding="utf-8"))
     if not isinstance(spec, dict):
-        raise SystemExit(f"{spec_path.name}: 中身が辞書になっていない")
+        raise SystemExit(f"{Path(spec_path).name}: 中身が辞書になっていない")
+    spec_path = Path(spec_path)
     width = int(spec.get("width", 1600))
-    scale = float(args.scale or spec.get("scale", 2))
+    scale = float(scale or spec.get("scale", 2))
 
-    out_png = (Path(args.out) if args.out else spec_path.with_suffix(".png")).resolve()
+    out_png = (Path(out) if out else spec_path.with_suffix(".png")).resolve()
     out_html = out_png.with_suffix(".html")
     out_html.parent.mkdir(parents=True, exist_ok=True)
     out_html.write_text(build_html(spec, spec_path.parent), encoding="utf-8")
     print(f"  html  {out_html}")
-    if args.html:
-        return
+    if html_only:
+        return out_html
 
     tall = int(spec.get("height", 0)) or 4200
     render(out_html, out_png, width, scale, tall)
@@ -104,6 +109,7 @@ def one(spec_path: Path, args) -> None:
         print(f"  png   {out_png}  ({w}x{h})")
     else:
         print(f"  png   {out_png}")
+    return out_png
 
 
 def main() -> None:
@@ -124,7 +130,7 @@ def main() -> None:
         if not p.exists():
             raise SystemExit(f"見つからない: {p}")
         print(p.name)
-        one(p, args)
+        render_spec(p, out=args.out, scale=args.scale, html_only=args.html)
 
 
 if __name__ == "__main__":
